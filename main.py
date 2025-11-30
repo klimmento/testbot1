@@ -4,8 +4,7 @@ from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 
 TOKEN = "8246029414:AAHAaCezVforMTAdGRwCkCFAtGRX0kq0BNE"
-API_KEY = "https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true
-"
+API_KEY = "https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&current_weather=true"
 
 bot = Bot(TOKEN)
 dp = Dispatcher()
@@ -36,3 +35,4 @@ async def main():
 
 if __name__ == "__main__":
     asyncio.run(main())
+
