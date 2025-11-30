@@ -9,30 +9,39 @@ API_KEY = "https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}
 bot = Bot(TOKEN)
 dp = Dispatcher()
 
+# Храним число для каждого пользователя
+secret_numbers = {}
+
 @dp.message(CommandStart())
 async def start(msg: types.Message):
-    await msg.answer("Напиши город")
+    num = random.randint(1, 10)
+    secret_numbers[msg.from_user.id] = num
+    await msg.answer("Я загадал число от 1 до 10. Попробуй угадать!")
 
 @dp.message()
-async def weather(msg: types.Message):
-    city = msg.text.strip()
-    url = f"https://api.openweathermap.org/data/2.5/weather?q={city}&units=metric&lang=ru&appid={API_KEY}"
+async def guess(msg: types.Message):
+    user_id = msg.from_user.id
 
-    async with aiohttp.ClientSession() as session:
-        async with session.get(url) as r:
-            data = await r.json()
-
-    if data.get("cod") != 200:
-        await msg.answer("Город не найден")
+    if user_id not in secret_numbers:
+        await start(msg)
         return
 
-    temp = data["main"]["temp"]
-    desc = data["weather"][0]["description"]
-    await msg.answer(f"{city}: {temp}°C, {desc}")
+    try:
+        g = int(msg.text)
+    except:
+        await msg.answer("Введи число")
+        return
+
+    num = secret_numbers[user_id]
+
+    if g == num:
+        await msg.answer("Правильно! Я загадал " + str(num) + ". Загадываю новое!")
+        secret_numbers[user_id] = random.randint(1, 10)
+    else:
+        await msg.answer("Неправильно, попробуй ещё")
 
 async def main():
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
     asyncio.run(main())
-
