@@ -1,0 +1,62 @@
+import asyncio
+import aiohttp
+from aiogram import Bot, Dispatcher, types
+from aiogram.filters import CommandStart
+
+TOKEN = "8246029414:AAHAaCezVforMTAdGRwCkCFAtGRX0kq0BNE"
+
+bot = Bot(TOKEN)
+dp = Dispatcher()
+
+# API
+GEOCODE_URL = "https://nominatim.openstreetmap.org/search"
+WEATHER_URL = "https://api.open-meteo.com/v1/forecast"
+
+@dp.message(CommandStart())
+async def start(msg: types.Message):
+    await msg.answer("Напиши город")
+
+@dp.message()
+async def weather(msg: types.Message):
+    city = msg.text.strip()
+
+    # Получаем координаты
+    async with aiohttp.ClientSession() as session:
+        async with session.get(GEOCODE_URL, params={
+            "q": city,
+            "format": "json",
+            "limit": 1
+        }) as r:
+            data = await r.json()
+
+    if not data:
+        await msg.answer("Город не найден")
+        return
+
+    lat = data[0]["lat"]
+    lon = data[0]["lon"]
+
+    # Получаем погоду
+    async with aiohttp.ClientSession() as session:
+        async with session.get(WEATHER_URL, params={
+            "latitude": lat,
+            "longitude": lon,
+            "current_weather": True,
+        }) as r:
+            weather = await r.json()
+
+    if "current_weather" not in weather:
+        await msg.answer("Не удалось получить погоду")
+        return
+
+    w = weather["current_weather"]
+    temp = w["temperature"]
+    wind = w["windspeed"]
+
+    await msg.answer(f"{city}: {temp}°C, ветер {wind} км/ч")
+
+async def main():
+    await dp.start_polling(bot)
+
+if __name__ == "__main__":
+    asyncio.run(main())
